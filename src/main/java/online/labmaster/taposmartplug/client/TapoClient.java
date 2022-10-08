@@ -32,28 +32,9 @@ public class TapoClient {
     @Value("${tapo.plug.uri:http://192.168.241.206/app}")
     private String plugUri;
 
-    public HttpResponse call(HttpRequestBase request, CookieStore cookieStore) throws IOException {
-        HttpClient httpClient = HttpClients.custom().setDefaultCookieStore(cookieStore).build();
-        return httpClient.execute(request);
-    }
-
-    public HttpRequestBase buildHandshakeRequest(String publicKey) throws UnsupportedEncodingException, JsonProcessingException {
-        HttpPost request = new HttpPost(plugUri);
-        HandshakeRequest handshake = new HandshakeRequest(HandshakeRequest.HANDSHAKE_METHOD, publicKey);
-        request.setEntity(new StringEntity(objectMapper.writeValueAsString(handshake)));
-        return request;
-    }
-
     public HandshakeResponse callHandshake(String publicKey, CookieStore cookieStore) throws IOException {
         HttpResponse response = call(buildHandshakeRequest(publicKey), cookieStore);
         return objectMapper.readValue(response.getEntity().getContent(), HandshakeResponse.class);
-    }
-
-    public HttpRequestBase request(String encodedRequest) throws UnsupportedEncodingException, JsonProcessingException {
-        HttpPost request = new HttpPost(plugUri);
-        EnvelopeRequest handshake = new EnvelopeRequest(EnvelopeRequest.SECURE_PASSTHROUGH_METHOD, encodedRequest);
-        request.setEntity(new StringEntity(objectMapper.writeValueAsString(handshake)));
-        return request;
     }
 
     public EnvelopeResponse callEncrypted(String encryptedMessage, CookieStore cookieStore) throws IOException {
@@ -61,9 +42,27 @@ public class TapoClient {
         return objectMapper.readValue(response.getEntity().getContent(), EnvelopeResponse.class);
     }
 
-
-
     public CookieStore getCookieStore() {
         return new BasicCookieStore();
     }
+
+    private HttpResponse call(HttpRequestBase request, CookieStore cookieStore) throws IOException {
+        HttpClient httpClient = HttpClients.custom().setDefaultCookieStore(cookieStore).build();
+        return httpClient.execute(request);
+    }
+
+    private HttpRequestBase buildHandshakeRequest(String publicKey) throws UnsupportedEncodingException, JsonProcessingException {
+        HttpPost request = new HttpPost(plugUri);
+        HandshakeRequest handshake = new HandshakeRequest(HandshakeRequest.HANDSHAKE_METHOD, publicKey);
+        request.setEntity(new StringEntity(objectMapper.writeValueAsString(handshake)));
+        return request;
+    }
+
+    private HttpRequestBase request(String encodedRequest) throws UnsupportedEncodingException, JsonProcessingException {
+        HttpPost request = new HttpPost(plugUri);
+        EnvelopeRequest handshake = new EnvelopeRequest(EnvelopeRequest.SECURE_PASSTHROUGH_METHOD, encodedRequest);
+        request.setEntity(new StringEntity(objectMapper.writeValueAsString(handshake)));
+        return request;
+    }
+
 }
