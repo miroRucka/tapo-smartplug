@@ -2,10 +2,14 @@ package online.labmaster.taposmartplug.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import online.labmaster.taposmartplug.api.inbound.EnvelopeRequest;
-import online.labmaster.taposmartplug.api.inbound.HandshakeRequest;
-import online.labmaster.taposmartplug.api.outbound.EnvelopeResponse;
-import online.labmaster.taposmartplug.api.outbound.HandshakeResponse;
+import online.labmaster.taposmartplug.api.TapoException;
+import online.labmaster.taposmartplug.api.inbound.LoginResponse;
+import online.labmaster.taposmartplug.api.inbound.TapoResponse;
+import online.labmaster.taposmartplug.api.outbound.EnvelopeRequest;
+import online.labmaster.taposmartplug.api.outbound.HandshakeRequest;
+import online.labmaster.taposmartplug.api.inbound.EnvelopeResponse;
+import online.labmaster.taposmartplug.api.inbound.HandshakeResponse;
+import online.labmaster.taposmartplug.encryption.EncryptionService;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
@@ -18,28 +22,51 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 
 @Service
 public class TapoClient {
 
 
+    public static final String BASE_ERROR_MESSAGE = "Request error with error code: ";
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private EncryptionService encryptionService;
 
     @Value("${tapo.plug.uri:http://192.168.241.206/app}")
     private String plugUri;
 
     public HandshakeResponse callHandshake(String publicKey, CookieStore cookieStore) throws IOException {
+        Objects.requireNonNull(publicKey);
+        Objects.requireNonNull(cookieStore);
         HttpResponse response = call(buildHandshakeRequest(publicKey), cookieStore);
-        return objectMapper.readValue(response.getEntity().getContent(), HandshakeResponse.class);
+        HandshakeResponse handshakeResponse = objectMapper.readValue(response.getEntity().getContent(), HandshakeResponse.class);
+        if (handshakeResponse == null || handshakeResponse.errorCode != 0) {
+            throw new TapoException(BASE_ERROR_MESSAGE + handshakeResponse != null ? String.valueOf(handshakeResponse.errorCode) : "no response");
+        }
+        return handshakeResponse;
     }
 
-    public EnvelopeResponse callEncrypted(String encryptedMessage, CookieStore cookieStore) throws IOException {
-        HttpResponse response = call(request(encryptedMessage), cookieStore);
-        return objectMapper.readValue(response.getEntity().getContent(), EnvelopeResponse.class);
+    public <T extends TapoResponse> T callEncrypted(String encryptedMessage, CookieStore cookieStore, String token, Class<T> responseType, byte[] keys) throws IOException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+        Objects.requireNonNull(encryptedMessage);
+        Objects.requireNonNull(cookieStore);
+        HttpResponse response = call(request(encryptedMessage, token), cookieStore);
+        EnvelopeResponse envelopeResponse = objectMapper.readValue(response.getEntity().getContent(), EnvelopeResponse.class);
+        if (envelopeResponse == null || envelopeResponse.errorCode != 0) {
+            throw new TapoException(BASE_ERROR_MESSAGE + envelopeResponse != null ? String.valueOf(envelopeResponse.errorCode) : "no response");
+        }
+        return objectMapper.readValue(encryptionService.decryptMessage(keys, envelopeResponse.result.response), responseType);
     }
 
     public CookieStore getCookieStore() {
@@ -53,14 +80,14 @@ public class TapoClient {
 
     private HttpRequestBase buildHandshakeRequest(String publicKey) throws UnsupportedEncodingException, JsonProcessingException {
         HttpPost request = new HttpPost(plugUri);
-        HandshakeRequest handshake = new HandshakeRequest(HandshakeRequest.HANDSHAKE_METHOD, publicKey);
+        HandshakeRequest handshake = new HandshakeRequest(publicKey);
         request.setEntity(new StringEntity(objectMapper.writeValueAsString(handshake)));
         return request;
     }
 
-    private HttpRequestBase request(String encodedRequest) throws UnsupportedEncodingException, JsonProcessingException {
-        HttpPost request = new HttpPost(plugUri);
-        EnvelopeRequest handshake = new EnvelopeRequest(EnvelopeRequest.SECURE_PASSTHROUGH_METHOD, encodedRequest);
+    private HttpRequestBase request(String encodedRequest, String token) throws UnsupportedEncodingException, JsonProcessingException {
+        HttpPost request = new HttpPost(plugUri + (token != null ? "?token=" + token : ""));
+        EnvelopeRequest handshake = new EnvelopeRequest(encodedRequest);
         request.setEntity(new StringEntity(objectMapper.writeValueAsString(handshake)));
         return request;
     }

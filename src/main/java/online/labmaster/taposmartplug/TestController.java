@@ -1,9 +1,12 @@
 package online.labmaster.taposmartplug;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import online.labmaster.taposmartplug.api.inbound.LoginRequest;
-import online.labmaster.taposmartplug.api.outbound.EnvelopeResponse;
-import online.labmaster.taposmartplug.api.outbound.HandshakeResponse;
+import online.labmaster.taposmartplug.api.inbound.EnergyUsageResponse;
+import online.labmaster.taposmartplug.api.inbound.LoginResponse;
+import online.labmaster.taposmartplug.api.outbound.EnergyUsageRequest;
+import online.labmaster.taposmartplug.api.outbound.LoginRequest;
+import online.labmaster.taposmartplug.api.inbound.EnvelopeResponse;
+import online.labmaster.taposmartplug.api.inbound.HandshakeResponse;
 import online.labmaster.taposmartplug.client.TapoClient;
 import online.labmaster.taposmartplug.client.TapoKeys;
 import online.labmaster.taposmartplug.encryption.EncryptionService;
@@ -44,12 +47,20 @@ public class TestController {
     @Value("${tapo.plug.password}")
     private String password;
 
+    @Value("${tapo.plug.terminal.id}")
+    private String terminalId;
+
     @RequestMapping(path = "/test", method = RequestMethod.GET)
     public ResponseEntity test() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
-
-        System.out.println("----------------> " + loadKeys());
-
+        loadKeys();
         return new ResponseEntity(HttpStatus.ACCEPTED);
+    }
+
+    @RequestMapping(path = "/energy-usage", method = RequestMethod.GET)
+    public EnergyUsageResponse energyUsed() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        TapoKeys keys = loadKeys();
+        String encryptedRequest = encryptionService.encryptMessage(keys.getKeys(), objectMapper.writeValueAsString(new EnergyUsageRequest(terminalId)));
+        return tapoClient.callEncrypted(encryptedRequest, keys.getCookieStore(), keys.getToken(), EnergyUsageResponse.class, keys.getKeys());
     }
 
     private TapoKeys loadKeys() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
@@ -61,10 +72,9 @@ public class TestController {
         HandshakeResponse handshakeResponse = tapoClient.callHandshake(publicKey, cookieStore);
 
         //login
-        byte[] keys = encryptionService.decryptKeys(keyPair.getPrivate(), handshakeResponse.getResult().getKey());
-        LoginRequest loginRequest = new LoginRequest(LoginRequest.LOGIN_DEVICE_METHOD, encryptionService.encryptLoginName(username), encryptionService.base64Encode(password));
-        String rq = encryptionService.encryptMessage(keys, objectMapper.writeValueAsString(loginRequest));
-        EnvelopeResponse loginResponse = tapoClient.callEncrypted(rq, cookieStore);
-        return new TapoKeys(encryptionService.decryptMessage(keys, loginResponse.getResult().getResponse()), keys, cookieStore);
+        byte[] keys = encryptionService.decryptKeys(keyPair.getPrivate(), handshakeResponse.result.key);
+        String encryptedLoginRequest = encryptionService.encryptMessage(keys, objectMapper.writeValueAsString(new LoginRequest(encryptionService.encryptLoginName(username), encryptionService.base64Encode(password))));
+        LoginResponse loginResponse = tapoClient.callEncrypted(encryptedLoginRequest, cookieStore, null, LoginResponse.class, keys);
+        return new TapoKeys(loginResponse.result.token, keys, cookieStore);
     }
 }
