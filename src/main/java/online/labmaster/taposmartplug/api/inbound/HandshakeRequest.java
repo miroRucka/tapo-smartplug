@@ -1,6 +1,10 @@
 package online.labmaster.taposmartplug.api.inbound;
 
+import online.labmaster.taposmartplug.api.KeyParam;
+
 public class HandshakeRequest {
+
+    public static final String HANDSHAKE_METHOD = "handshake";
 
     private final String method;
     private final KeyParam params;
@@ -12,7 +16,7 @@ public class HandshakeRequest {
 
     public HandshakeRequest(String method, String key) {
         this.method = method;
-        this.params = new KeyParam(key);
+        this.params = new KeyParam().withKey(key);
     }
 
     public String getMethod() {
