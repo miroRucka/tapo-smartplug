@@ -3,13 +3,12 @@ package online.labmaster.taposmartplug.client;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import online.labmaster.taposmartplug.api.TapoException;
-import online.labmaster.taposmartplug.api.inbound.LoginResponse;
 import online.labmaster.taposmartplug.api.inbound.TapoResponse;
 import online.labmaster.taposmartplug.api.outbound.EnvelopeRequest;
 import online.labmaster.taposmartplug.api.outbound.HandshakeRequest;
 import online.labmaster.taposmartplug.api.inbound.EnvelopeResponse;
 import online.labmaster.taposmartplug.api.inbound.HandshakeResponse;
-import online.labmaster.taposmartplug.encryption.EncryptionService;
+import online.labmaster.taposmartplug.service.EncryptionService;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
@@ -53,7 +52,7 @@ public class TapoClient {
         HttpResponse response = call(buildHandshakeRequest(publicKey), cookieStore);
         HandshakeResponse handshakeResponse = objectMapper.readValue(response.getEntity().getContent(), HandshakeResponse.class);
         if (handshakeResponse == null || handshakeResponse.errorCode != 0) {
-            throw new TapoException(BASE_ERROR_MESSAGE + handshakeResponse != null ? String.valueOf(handshakeResponse.errorCode) : "no response");
+            throw new TapoException(BASE_ERROR_MESSAGE + (handshakeResponse != null ? String.valueOf(handshakeResponse.errorCode) : "no response"));
         }
         return handshakeResponse;
     }
@@ -64,7 +63,7 @@ public class TapoClient {
         HttpResponse response = call(request(encryptedMessage, token), cookieStore);
         EnvelopeResponse envelopeResponse = objectMapper.readValue(response.getEntity().getContent(), EnvelopeResponse.class);
         if (envelopeResponse == null || envelopeResponse.errorCode != 0) {
-            throw new TapoException(BASE_ERROR_MESSAGE + envelopeResponse != null ? String.valueOf(envelopeResponse.errorCode) : "no response");
+            throw new TapoException(BASE_ERROR_MESSAGE + (envelopeResponse != null ? String.valueOf(envelopeResponse.errorCode) : "no response"));
         }
         return objectMapper.readValue(encryptionService.decryptMessage(keys, envelopeResponse.result.response), responseType);
     }

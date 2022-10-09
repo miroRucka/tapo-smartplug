@@ -1,4 +1,4 @@
-package online.labmaster.taposmartplug.encryption;
+package online.labmaster.taposmartplug.service;
 
 import org.springframework.stereotype.Service;
 
@@ -52,7 +52,7 @@ public class EncryptionService {
         return decryptCipher.doFinal(decodedBytes);
     }
 
-    public String encryptMessage(byte[] keys, String message) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException {
+    public String encryptMessage(byte[] keys, String message) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         Objects.requireNonNull(keys);
         Objects.requireNonNull(message);
         Cipher cipher = Cipher.getInstance(AES_CBC_PKCS_5_PADDING);
