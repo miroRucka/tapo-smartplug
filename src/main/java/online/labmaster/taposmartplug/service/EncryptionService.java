@@ -20,12 +20,12 @@ import java.util.Objects;
 @Service
 public class EncryptionService {
 
-    public static final String RSA = "RSA";
-    public static final int KEY_SIZE = 1024;
     public static final String RSA_ECB_PKCS_1_PADDING = "RSA/ECB/PKCS1Padding";
     public static final String AES_CBC_PKCS_5_PADDING = "AES/CBC/PKCS5PADDING";
-    public static final String ALGORITHM = "AES";
+    public static final String RSA = "RSA";
     public static final String SHA_1 = "SHA-1";
+    public static final String ALGORITHM = "AES";
+    public static final int KEY_SIZE = 1024;
 
     private final Base64.Encoder encoder = Base64.getEncoder();
     private final Base64.Decoder decoder = Base64.getDecoder();
