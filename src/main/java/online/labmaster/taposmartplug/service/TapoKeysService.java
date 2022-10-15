@@ -23,6 +23,8 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.List;
 
 @Service
 public class TapoKeysService {
@@ -44,35 +46,46 @@ public class TapoKeysService {
     @Value("${tapo.plug.password}")
     private String password;
 
-    private TapoKeys tapoKeys;
+    @Value("${tapo.plug.IPs}")
+    private List<String> plugIPs;
+
+    private HashMap<String, TapoKeys> tapoKeys;
 
     @PostConstruct
     public void init() {
         try {
-            tapoKeys = loadKeys();
+            tapoKeys = loadAllKeys();
         } catch (Exception e) {
             logger.error("cannot retrieve energy usage", e);
         }
     }
 
-    public TapoKeys loadKeys() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+    private HashMap<String, TapoKeys> loadAllKeys() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        HashMap<String, TapoKeys> result = new HashMap<>();
+        for (String plugIP : plugIPs) {
+            result.put(plugIP, loadKeys(plugIP));
+        }
+        return result;
+    }
+
+    private TapoKeys loadKeys(String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
         CookieStore cookieStore = tapoClient.getCookieStore();
         KeyPair keyPair = encryptionService.generateKeyPair();
         //handshake
         String publicKey = encryptionService.transformPublicCertificate(keyPair.getPublic());
-        HandshakeResponse handshakeResponse = tapoClient.callHandshake(publicKey, cookieStore);
+        HandshakeResponse handshakeResponse = tapoClient.callHandshake(plugIP, publicKey, cookieStore);
         //login
         byte[] keys = encryptionService.decryptKeys(keyPair.getPrivate(), handshakeResponse.result.key);
         String encryptedLoginRequest = encryptionService.encryptMessage(keys, objectMapper.writeValueAsString(new LoginRequest(encryptionService.encryptLoginName(username), encryptionService.base64Encode(password))));
-        LoginResponse loginResponse = tapoClient.callEncrypted(encryptedLoginRequest, cookieStore, null, LoginResponse.class, keys);
+        LoginResponse loginResponse = tapoClient.callEncrypted(plugIP, encryptedLoginRequest, cookieStore, null, LoginResponse.class, keys);
         return new TapoKeys(loginResponse.result.token, keys, cookieStore);
     }
 
-    public TapoKeys getTapoKeys() {
-        if (tapoKeys != null) {
-            return tapoKeys;
+    public TapoKeys getTapoKeys(String plugIP) {
+        if (tapoKeys != null && tapoKeys.get(plugIP) != null) {
+            return tapoKeys.get(plugIP);
         }
         init();
-        return tapoKeys;
+        return tapoKeys.get(plugIP);
     }
 }

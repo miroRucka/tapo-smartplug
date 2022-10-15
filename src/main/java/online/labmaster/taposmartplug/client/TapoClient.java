@@ -43,13 +43,10 @@ public class TapoClient {
     @Autowired
     private EncryptionService encryptionService;
 
-    @Value("${tapo.plug.uri:http://192.168.241.206/app}")
-    private String plugUri;
-
-    public HandshakeResponse callHandshake(String publicKey, CookieStore cookieStore) throws IOException {
+    public HandshakeResponse callHandshake(String plugIP, String publicKey, CookieStore cookieStore) throws IOException {
         Objects.requireNonNull(publicKey);
         Objects.requireNonNull(cookieStore);
-        HttpResponse response = call(buildHandshakeRequest(publicKey), cookieStore);
+        HttpResponse response = call(buildHandshakeRequest(plugIP, publicKey), cookieStore);
         HandshakeResponse handshakeResponse = objectMapper.readValue(response.getEntity().getContent(), HandshakeResponse.class);
         if (handshakeResponse == null || handshakeResponse.errorCode != 0) {
             throw new TapoException(BASE_ERROR_MESSAGE + (handshakeResponse != null ? String.valueOf(handshakeResponse.errorCode) : "no response"));
@@ -57,10 +54,10 @@ public class TapoClient {
         return handshakeResponse;
     }
 
-    public <T extends TapoResponse> T callEncrypted(String encryptedMessage, CookieStore cookieStore, String token, Class<T> responseType, byte[] keys) throws IOException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+    public <T extends TapoResponse> T callEncrypted(String plugIP, String encryptedMessage, CookieStore cookieStore, String token, Class<T> responseType, byte[] keys) throws IOException, InvalidAlgorithmParameterException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException, NoSuchAlgorithmException, InvalidKeyException {
         Objects.requireNonNull(encryptedMessage);
         Objects.requireNonNull(cookieStore);
-        HttpResponse response = call(request(encryptedMessage, token), cookieStore);
+        HttpResponse response = call(request(plugIP, encryptedMessage, token), cookieStore);
         EnvelopeResponse envelopeResponse = objectMapper.readValue(response.getEntity().getContent(), EnvelopeResponse.class);
         if (envelopeResponse == null || envelopeResponse.errorCode != 0) {
             throw new TapoException(BASE_ERROR_MESSAGE + (envelopeResponse != null ? String.valueOf(envelopeResponse.errorCode) : "no response"));
@@ -77,18 +74,22 @@ public class TapoClient {
         return httpClient.execute(request);
     }
 
-    private HttpRequestBase buildHandshakeRequest(String publicKey) throws UnsupportedEncodingException, JsonProcessingException {
-        HttpPost request = new HttpPost(plugUri);
+    private HttpRequestBase buildHandshakeRequest(String plugIP, String publicKey) throws UnsupportedEncodingException, JsonProcessingException {
+        HttpPost request = new HttpPost(getPlugUri(plugIP));
         HandshakeRequest handshake = new HandshakeRequest(publicKey);
         request.setEntity(new StringEntity(objectMapper.writeValueAsString(handshake)));
         return request;
     }
 
-    private HttpRequestBase request(String encodedRequest, String token) throws UnsupportedEncodingException, JsonProcessingException {
-        HttpPost request = new HttpPost(plugUri + (token != null ? "?token=" + token : ""));
+    private HttpRequestBase request(String plugIP, String encodedRequest, String token) throws UnsupportedEncodingException, JsonProcessingException {
+        HttpPost request = new HttpPost(getPlugUri(plugIP) + (token != null ? "?token=" + token : ""));
         EnvelopeRequest handshake = new EnvelopeRequest(encodedRequest);
         request.setEntity(new StringEntity(objectMapper.writeValueAsString(handshake)));
         return request;
+    }
+
+    private String getPlugUri(String plugIP) {
+        return "http://" + plugIP + "/app";
     }
 
 }

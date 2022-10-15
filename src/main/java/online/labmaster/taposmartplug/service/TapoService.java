@@ -40,21 +40,21 @@ public class TapoService {
     @Value("${tapo.plug.terminal.id}")
     private String terminalId;
 
-    public EnergyUsageResponse energyUsed() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
-        TapoKeys keys = tapoKeysService.getTapoKeys();
+    public EnergyUsageResponse energyUsed(String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        TapoKeys keys = tapoKeysService.getTapoKeys(plugIP);
         String encryptedRequest = encryptionService.encryptMessage(keys.getKeys(), objectMapper.writeValueAsString(new EnergyUsageRequest(terminalId)));
-        return tapoClient.callEncrypted(encryptedRequest, keys.getCookieStore(), keys.getToken(), EnergyUsageResponse.class, keys.getKeys());
+        return tapoClient.callEncrypted(plugIP, encryptedRequest, keys.getCookieStore(), keys.getToken(), EnergyUsageResponse.class, keys.getKeys());
     }
 
-    public DeviceInfoResponse deviceInfo() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
-        TapoKeys keys = tapoKeysService.getTapoKeys();
+    public DeviceInfoResponse deviceInfo(String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        TapoKeys keys = tapoKeysService.getTapoKeys(plugIP);
         String encryptedRequest = encryptionService.encryptMessage(keys.getKeys(), objectMapper.writeValueAsString(new DeviceInfoRequest(terminalId)));
-        return tapoClient.callEncrypted(encryptedRequest, keys.getCookieStore(), keys.getToken(), DeviceInfoResponse.class, keys.getKeys());
+        return tapoClient.callEncrypted(plugIP, encryptedRequest, keys.getCookieStore(), keys.getToken(), DeviceInfoResponse.class, keys.getKeys());
     }
 
-    public DeviceUsageResponse deviceUsage() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
-        TapoKeys keys = tapoKeysService.getTapoKeys();
+    public DeviceUsageResponse deviceUsage(String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        TapoKeys keys = tapoKeysService.getTapoKeys(plugIP);
         String encryptedRequest = encryptionService.encryptMessage(keys.getKeys(), objectMapper.writeValueAsString(new DeviceUsageRequest(terminalId)));
-        return tapoClient.callEncrypted(encryptedRequest, keys.getCookieStore(), keys.getToken(), DeviceUsageResponse.class, keys.getKeys());
+        return tapoClient.callEncrypted(plugIP, encryptedRequest, keys.getCookieStore(), keys.getToken(), DeviceUsageResponse.class, keys.getKeys());
     }
 }

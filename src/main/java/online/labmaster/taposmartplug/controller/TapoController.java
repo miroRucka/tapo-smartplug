@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.crypto.BadPaddingException;
@@ -31,23 +32,23 @@ public class TapoController {
     private TapoKeysService tapoKeysService;
 
     @RequestMapping(path = "/load-keys", method = RequestMethod.GET)
-    public ResponseEntity test() {
-        tapoKeysService.getTapoKeys();
+    public ResponseEntity test(@RequestParam String plugIP) {
+        tapoKeysService.getTapoKeys(plugIP);
         return new ResponseEntity(HttpStatus.ACCEPTED);
     }
 
     @RequestMapping(path = "/energy-usage", method = RequestMethod.GET)
-    public EnergyUsageResponse energyUsed() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
-        return tapoService.energyUsed();
+    public EnergyUsageResponse energyUsed(@RequestParam String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        return tapoService.energyUsed(plugIP);
     }
 
     @RequestMapping(path = "/device-info", method = RequestMethod.GET)
-    public DeviceInfoResponse deviceInfo() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
-        return tapoService.deviceInfo();
+    public DeviceInfoResponse deviceInfo(@RequestParam String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        return tapoService.deviceInfo(plugIP);
     }
 
     @RequestMapping(path = "/device-usage", method = RequestMethod.GET)
-    public DeviceUsageResponse deviceUsage() throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
-        return tapoService.deviceUsage();
+    public DeviceUsageResponse deviceUsage(@RequestParam String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        return tapoService.deviceUsage(plugIP);
     }
 }

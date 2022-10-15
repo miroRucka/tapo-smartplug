@@ -9,13 +9,13 @@ import online.labmaster.taposmartplug.service.TapoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Supplier;
 
 @Component
 public class TapoMetrics {
@@ -39,25 +39,34 @@ public class TapoMetrics {
     @Autowired
     private TapoService tapoService;
 
-    @Autowired
-    private TapoMetricsData tapoMetricsData;
+    private Map<String, TapoMetricsData> tapoMetricsData = new HashMap<>();
+
+
+    @Value("${tapo.plug.IPs}")
+    private List<String> plugIPs;
 
     @Async
     @Scheduled(fixedDelay = 30000, initialDelay = 5000)
     public void registerTapoMetrics() {
+        logger.info("-> start measure ->");
+        for (String plugIP : plugIPs) {
+            registerMetricsByIP(plugIP);
+        }
+    }
+
+    private void registerMetricsByIP(String plugIP) {
         try {
-            tapoMetricsData.setEnergyUsageResponse(tapoService.energyUsed());
-            tapoMetricsData.setDeviceInfoResponse(tapoService.deviceInfo());
-            Gauge.builder(TAPO_ENERGY_USAGE_CURRENT_POWER, tapoMetricsData, energyUsage -> tapoMetricsData.getEnergyUsage().currentPower).tags(buildPlugTags(tapoMetricsData.getDeviceInfo())).register(registry);
-            Gauge.builder(TAPO_ENERGY_USAGE_TODAY_ENERGY, tapoMetricsData, energyUsage -> tapoMetricsData.getEnergyUsage().todayEnergy).tags(buildPlugTags(tapoMetricsData.getDeviceInfo())).register(registry);
-            Gauge.builder(TAPO_ENERGY_USAGE_MONTH_ENERGY, tapoMetricsData, energyUsage -> tapoMetricsData.getEnergyUsage().monthEnergy).tags(buildPlugTags(tapoMetricsData.getDeviceInfo())).register(registry);
-            Gauge.builder(TAPO_ENERGY_USAGE_TODAY_RUNTIME, tapoMetricsData, energyUsage -> tapoMetricsData.getEnergyUsage().todayRuntime).tags(buildPlugTags(tapoMetricsData.getDeviceInfo())).register(registry);
-            Gauge.builder(TAPO_ENERGY_USAGE_MONTH_RUNTIME, tapoMetricsData, energyUsage -> tapoMetricsData.getEnergyUsage().monthRuntime).tags(buildPlugTags(tapoMetricsData.getDeviceInfo())).register(registry);
-            Gauge.builder(TAPO_DEVICE_INFO_ON_TIME, tapoMetricsData, energyUsage -> tapoMetricsData.getDeviceInfo().onTime).tags(buildPlugTags(tapoMetricsData.getDeviceInfo())).register(registry);
-            Gauge.builder(TAPO_DEVICE_INFO_RSSI, tapoMetricsData, energyUsage -> Double.parseDouble(tapoMetricsData.getDeviceInfo().rssi)).tags(buildPlugTags(tapoMetricsData.getDeviceInfo())).register(registry);
-            Gauge.builder(TAPO_DEVICE_INFO_DEVICE_ON, tapoMetricsData, energyUsage -> tapoMetricsData.getDeviceInfo().deviceOn ? 1 : 0).tags(buildPlugTags(tapoMetricsData.getDeviceInfo())).register(registry);
+            tapoMetricsData.put(plugIP, new TapoMetricsData(tapoService.energyUsed(plugIP), tapoService.deviceInfo(plugIP)));
+            Gauge.builder(TAPO_ENERGY_USAGE_CURRENT_POWER, () -> tapoMetricsData.get(plugIP).getEnergyUsage().currentPower).strongReference(true).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
+            Gauge.builder(TAPO_ENERGY_USAGE_TODAY_ENERGY, () -> tapoMetricsData.get(plugIP).getEnergyUsage().todayEnergy).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
+            Gauge.builder(TAPO_ENERGY_USAGE_MONTH_ENERGY, () -> tapoMetricsData.get(plugIP).getEnergyUsage().monthEnergy).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
+            Gauge.builder(TAPO_ENERGY_USAGE_TODAY_RUNTIME, () -> tapoMetricsData.get(plugIP).getEnergyUsage().todayRuntime).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
+            Gauge.builder(TAPO_ENERGY_USAGE_MONTH_RUNTIME, () -> tapoMetricsData.get(plugIP).getEnergyUsage().monthRuntime).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
+            Gauge.builder(TAPO_DEVICE_INFO_ON_TIME, () -> tapoMetricsData.get(plugIP).getDeviceInfo().onTime).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
+            Gauge.builder(TAPO_DEVICE_INFO_RSSI, () -> Double.parseDouble(tapoMetricsData.get(plugIP).getDeviceInfo().rssi)).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
+            Gauge.builder(TAPO_DEVICE_INFO_DEVICE_ON, () -> tapoMetricsData.get(plugIP).getDeviceInfo().deviceOn ? 1 : 0).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
         } catch (Exception e) {
-            logger.error("cannot retrieve tapo metrics", e);
+            logger.error("cannot retrieve tapo metrics for plug ip: " + plugIP, e);
         }
     }
 
