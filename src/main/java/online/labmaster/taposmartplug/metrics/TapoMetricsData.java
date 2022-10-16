@@ -4,16 +4,7 @@ import online.labmaster.taposmartplug.api.TapoException;
 import online.labmaster.taposmartplug.api.inbound.DeviceInfoResponse;
 import online.labmaster.taposmartplug.api.inbound.EnergyUsageResponse;
 
-public class TapoMetricsData {
-
-    private final EnergyUsageResponse energyUsageResponse;
-
-    private final DeviceInfoResponse deviceInfoResponse;
-
-    public TapoMetricsData(EnergyUsageResponse energyUsageResponse, DeviceInfoResponse deviceInfoResponse) {
-        this.energyUsageResponse = energyUsageResponse;
-        this.deviceInfoResponse = deviceInfoResponse;
-    }
+public record TapoMetricsData(EnergyUsageResponse energyUsageResponse, DeviceInfoResponse deviceInfoResponse) {
 
     public EnergyUsageResponse.EnergyUsage getEnergyUsage() {
         if (energyUsageResponse != null) {
