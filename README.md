@@ -46,3 +46,9 @@ current list
 | tapo_deviceInfo_on_time       |
 | tapo_deviceInfo_rssi          |
 | tapo_deviceInfo_device_on     |
+
+
+## TODO
+
+- swagger API describe
+- docker compose with prometheus and grafana
