@@ -1,7 +1,7 @@
 # TAPO smartplug prometheus monitoring
 Tapo smart pulug advanced monitoring for prometheus &amp; grafana
 
-###How to use it - source code?
+##How to use it - source code?
 
 This is a spring boot application that has a RESTful API and Prometheus metrics for better monitoring of smart sockets Smart Plug metrics for TP-Link Tapo P110.
 
@@ -20,7 +20,7 @@ class with the following virtual machine parameters
 WARNING! the application must run on the same network as the sockets
 
 
-###How to use it - docker?
+##How to use it - docker?
 
 Jednoduché spustenie pomocou príkazu
 
@@ -28,7 +28,7 @@ Jednoduché spustenie pomocou príkazu
 
 Parametre sú popísané vyššie
 
-###Prometheus metrics
+##Prometheus metrics
 
 metrics are available at host:8080/actuator/prometheus
 
