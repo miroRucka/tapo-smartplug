@@ -49,7 +49,7 @@ public class TapoClient {
         HttpResponse response = call(buildHandshakeRequest(plugIP, publicKey), cookieStore);
         HandshakeResponse handshakeResponse = objectMapper.readValue(response.getEntity().getContent(), HandshakeResponse.class);
         if (handshakeResponse == null || handshakeResponse.errorCode != 0) {
-            throw new TapoException(BASE_ERROR_MESSAGE + (handshakeResponse != null ? String.valueOf(handshakeResponse.errorCode) : "no response"));
+            throw new TapoException(BASE_ERROR_MESSAGE + (handshakeResponse != null ? String.valueOf(handshakeResponse.errorCode) : "no response"), handshakeResponse.errorCode);
         }
         return handshakeResponse;
     }
@@ -60,7 +60,7 @@ public class TapoClient {
         HttpResponse response = call(request(plugIP, encryptedMessage, token), cookieStore);
         EnvelopeResponse envelopeResponse = objectMapper.readValue(response.getEntity().getContent(), EnvelopeResponse.class);
         if (envelopeResponse == null || envelopeResponse.errorCode != 0) {
-            throw new TapoException(BASE_ERROR_MESSAGE + (envelopeResponse != null ? String.valueOf(envelopeResponse.errorCode) : "no response"));
+            throw new TapoException(BASE_ERROR_MESSAGE + (envelopeResponse != null ? String.valueOf(envelopeResponse.errorCode) : "no response"), envelopeResponse.errorCode);
         }
         return objectMapper.readValue(encryptionService.decryptMessage(keys, envelopeResponse.result.response), responseType);
     }

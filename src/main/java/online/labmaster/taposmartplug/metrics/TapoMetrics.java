@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.ImmutableTag;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
+import online.labmaster.taposmartplug.api.TapoException;
 import online.labmaster.taposmartplug.api.inbound.DeviceInfoResponse;
 import online.labmaster.taposmartplug.service.TapoService;
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ public class TapoMetrics {
     public static final String DEVICE_ID = "device_id";
     public static final String IP = "ip";
     public static final String NICKNAME = "nickname";
+    public static final int TAPO_ERR_CODE = 9999;
 
     @Autowired
     private MeterRegistry registry;
@@ -65,7 +67,17 @@ public class TapoMetrics {
             Gauge.builder(TAPO_DEVICE_INFO_ON_TIME, () -> tapoMetricsData.get(plugIP).getDeviceInfo().onTime).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
             Gauge.builder(TAPO_DEVICE_INFO_RSSI, () -> Double.parseDouble(tapoMetricsData.get(plugIP).getDeviceInfo().rssi)).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
             Gauge.builder(TAPO_DEVICE_INFO_DEVICE_ON, () -> tapoMetricsData.get(plugIP).getDeviceInfo().deviceOn ? 1 : 0).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
+        } catch (TapoException e) {
+            handleTapoException(plugIP, e);
         } catch (Exception e) {
+            logger.error("cannot retrieve tapo metrics for plug ip: " + plugIP, e.getMessage());
+        }
+    }
+
+    private void handleTapoException(String plugIP, TapoException e) {
+        if (TAPO_ERR_CODE == e.getErrorCode()) {
+            Gauge.builder(TAPO_DEVICE_INFO_DEVICE_ON, () -> 0).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
+        } else {
             logger.error("cannot retrieve tapo metrics for plug ip: " + plugIP, e);
         }
     }

@@ -53,6 +53,9 @@ public class TapoKeysService {
 
     @PostConstruct
     public void init() {
+        if (plugIPs == null || plugIPs.isEmpty()) {
+            throw new IllegalStateException("No smart plug registered, please add parameter or property tapo.plug.IPs=ip plug1,ip plug2, ip...");
+        }
         try {
             tapoKeys = loadAllKeys();
         } catch (Exception e) {
