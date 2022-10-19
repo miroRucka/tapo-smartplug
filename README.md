@@ -133,6 +133,14 @@ The dashboard is located at [Super mega dashboard 17216](https://grafana.com/gra
 
 ![grafana dashboard example](dashboard.png)
 
+### Control API
+
+
+The API documentation is at:
+
+http://localhost:8080/swagger-ui/index.html
+
+
 ## TODO
 - swagger API describe
 - API extension with write operation

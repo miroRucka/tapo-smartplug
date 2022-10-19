@@ -1,5 +1,6 @@
 package online.labmaster.taposmartplug.controller;
 
+import online.labmaster.taposmartplug.api.TapoApi;
 import online.labmaster.taposmartplug.api.inbound.DeviceInfoResponse;
 import online.labmaster.taposmartplug.api.inbound.DeviceUsageResponse;
 import online.labmaster.taposmartplug.api.inbound.EnergyUsageResponse;
@@ -25,7 +26,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-public class TapoController {
+public class TapoController implements TapoApi {
 
     @Autowired
     private TapoService tapoService;
@@ -36,26 +37,22 @@ public class TapoController {
     @Value("${tapo.plug.IPs}")
     private List<String> plugIPs;
 
-    @RequestMapping(path = "/load-keys", method = RequestMethod.GET)
-    public ResponseEntity test(@RequestParam String plugIP) {
+    public ResponseEntity loadKeys(@RequestParam String plugIP) {
         checkPlugIP(plugIP);
         tapoKeysService.getTapoKeys(plugIP);
         return new ResponseEntity(HttpStatus.ACCEPTED);
     }
 
-    @RequestMapping(path = "/energy-usage", method = RequestMethod.GET)
     public EnergyUsageResponse energyUsed(@RequestParam String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
         checkPlugIP(plugIP);
         return tapoService.energyUsed(plugIP);
     }
 
-    @RequestMapping(path = "/device-info", method = RequestMethod.GET)
     public DeviceInfoResponse deviceInfo(@RequestParam String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
         checkPlugIP(plugIP);
         return tapoService.deviceInfo(plugIP);
     }
 
-    @RequestMapping(path = "/device-usage", method = RequestMethod.GET)
     public DeviceUsageResponse deviceUsage(@RequestParam String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
         checkPlugIP(plugIP);
         return tapoService.deviceUsage(plugIP);

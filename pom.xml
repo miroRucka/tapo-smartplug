@@ -16,6 +16,7 @@
 	<description>Tapo smart pulug advanced monitoring for prometheus / grafana</description>
 	<properties>
 		<java.version>17</java.version>
+		<springdoc-openapi.version>1.6.12</springdoc-openapi.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -38,6 +39,17 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
+		</dependency>
+		<!-- Springdoc OpenApi -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-webmvc-core</artifactId>
+			<version>${springdoc-openapi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<version>${springdoc-openapi.version}</version>
 		</dependency>
 
 		<dependency>
