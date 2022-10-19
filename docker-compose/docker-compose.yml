@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana-tapo
+#    volumes:
+#     -  you_can_store_db:/var/lib/grafana
+#     -  you_can_rewrite_configuration:/etc/grafana/grafana.ini  
+    ports:
+      - 3000:3000
+    networks:
+      - tapo
+      
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus-tapo
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    networks:
+      - tapo
+      
+  tapo-smart-plug:
+    image: mirorucka/tapo-smartplug:1.0.1
+    container_name: tapo-smart-plug
+    environment:
+      - JAVA_OPTS=-Dtapo.plug.username=${tapo_username} -Dtapo.plug.password=${tapo_password} -Dtapo.plug.IPs=${tapo_IPs}
+      - BPL_JVM_THREAD_COUNT=70  
+    ports:
+      - 8080:8080
+    networks:
+      - tapo
+
+networks:
+  tapo:
+    driver: bridge
