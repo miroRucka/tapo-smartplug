@@ -14,6 +14,10 @@ public class PlugSwitchRequest extends TapoRequest {
         this.params = new SwitchParam(plugOn);
     }
 
+    public SwitchParam getParams() {
+        return params;
+    }
+
     public static class SwitchParam {
 
         public SwitchParam(boolean deviceOn) {

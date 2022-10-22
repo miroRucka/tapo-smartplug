@@ -5,6 +5,7 @@ import online.labmaster.taposmartplug.api.inbound.DeviceInfoResponse;
 import online.labmaster.taposmartplug.api.inbound.DeviceUsageResponse;
 import online.labmaster.taposmartplug.api.inbound.EnergyUsageResponse;
 import online.labmaster.taposmartplug.api.inbound.TapoResponse;
+import online.labmaster.taposmartplug.api.outbound.NicknameRequest;
 import online.labmaster.taposmartplug.service.TapoKeysService;
 import online.labmaster.taposmartplug.service.TapoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,9 +58,21 @@ public class TapoController implements TapoApi {
     }
 
     @Override
+    public DeviceInfoResponse deviceRunningInfo(String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        checkPlugIP(plugIP);
+        return tapoService.deviceRunningInfo(plugIP);
+    }
+
+    @Override
     public DeviceUsageResponse deviceUsage(@RequestParam String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
         checkPlugIP(plugIP);
         return tapoService.deviceUsage(plugIP);
+    }
+
+    @Override
+    public TapoResponse deviceDiagnoseStatus(String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        checkPlugIP(plugIP);
+        return tapoService.deviceDiagnoseStatus(plugIP);
     }
 
     @Override
@@ -72,6 +85,12 @@ public class TapoController implements TapoApi {
     public TapoResponse plugOff(String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
         checkPlugIP(plugIP);
         return tapoService.switchPlug(plugIP, false);
+    }
+
+    @Override
+    public TapoResponse setNickname(String plugIP, NicknameRequest.NicknameParam nickname) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        checkPlugIP(plugIP);
+        return tapoService.setNickname(plugIP, nickname);
     }
 
     private void checkPlugIP(String plugIP) {
