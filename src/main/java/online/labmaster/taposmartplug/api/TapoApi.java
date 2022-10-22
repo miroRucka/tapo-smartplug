@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import online.labmaster.taposmartplug.api.inbound.DeviceInfoResponse;
 import online.labmaster.taposmartplug.api.inbound.DeviceUsageResponse;
 import online.labmaster.taposmartplug.api.inbound.EnergyUsageResponse;
+import online.labmaster.taposmartplug.api.inbound.TapoResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,4 +42,11 @@ public interface TapoApi {
     @Operation(summary = "Operation obtains data about the use of the device - how many hours of operation for different periods of time")
     DeviceUsageResponse deviceUsage(@Parameter(name = "plugIP", description = "Is the ip address of the destination socket on the local network ", in = ParameterIn.QUERY, required = true) @RequestParam String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException;
 
+    @RequestMapping(path = "/plug-on", method = RequestMethod.GET)
+    @Operation(summary = "Operation turns on the socket")
+    TapoResponse plugOn(@Parameter(name = "plugIP", description = "Is the ip address of the destination socket on the local network ", in = ParameterIn.QUERY, required = true) @RequestParam String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException;
+
+    @RequestMapping(path = "/plug-off", method = RequestMethod.GET)
+    @Operation(summary = "Operation turns off the socket")
+    TapoResponse plugOff(@Parameter(name = "plugIP", description = "Is the ip address of the destination socket on the local network ", in = ParameterIn.QUERY, required = true) @RequestParam String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException;
 }
