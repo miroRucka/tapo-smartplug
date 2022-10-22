@@ -30,6 +30,9 @@ public class EnergyUsageResponse extends TapoResponse {
         @JsonProperty("past1y")
         public List<Integer> past1y;
 
+        @JsonProperty("electricity_charge")
+        public List<Integer> electricityCharge;
+
         @JsonProperty("past7d")
         public Integer[][] past7d;
 

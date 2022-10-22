@@ -82,6 +82,9 @@ public class DeviceInfoResponse extends TapoResponse {
         @JsonProperty("overheated")
         public boolean overheated;
 
+        @JsonProperty("power_protection_status")
+        public String powerProtectionStatus;
+
         @JsonProperty("default_states")
         public DefaultStates defaultStates;
 
