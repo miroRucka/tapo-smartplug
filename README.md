@@ -137,12 +137,14 @@ current list
 | tapo_deviceInfo_device_on     |
 
 
-## functions:
-get_device_info
-get_device_usage
-get_energy_data
-get_energy_usage
-get_current_power
+## Supported TAPO functions
+| Function name     |
+|-------------------|
+| get_device_info   |
+| get_device_usage  |
+| get_energy_data   |
+| get_energy_usage  |
+| get_current_power |
 
 ## Prometheus UI
 
@@ -171,7 +173,9 @@ http://localhost:8080/swagger-ui/index.html
 - swagger API describe
 - API extension with write operation
 
-## Known Issues
+## Known Issues / Limitations
 
-In some cases, TP-Link TAPO device responds 403 even if Handshake 1 and 2 were successful.
+- In some cases, TP-Link TAPO device responds 403 even if Handshake 1 and 2 were successful.
 When it occurs, the code retries handshake and eventually the device responds properly.
+
+- Parameterized energy data query is not yet implemented (for example to to get historical data).
