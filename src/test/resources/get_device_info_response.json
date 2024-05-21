@@ -1,0 +1,38 @@
+{
+  "result": {
+    "device_id": "802283620812CA96783B773418A180BE2200D0CE",
+    "fw_ver": "1.3.0 Build 230905 Rel.152200",
+    "hw_ver": "1.0",
+    "type": "SMART.TAPOPLUG",
+    "model": "P110",
+    "mac": "A8-42-A1-7A-31-D3",
+    "hw_id": "2FB30EF5BF920C44099401D396C6B55B",
+    "fw_id": "00000000000000000000000000000000",
+    "oem_id": "18BDC6C734AF8407B3EF871EACFCECF5",
+    "ip": "192.168.88.147",
+    "time_diff": 60,
+    "ssid": "NEctMkRBRjky",
+    "rssi": -58,
+    "signal_level": 2,
+    "auto_off_status": "off",
+    "auto_off_remain_time": 0,
+    "latitude": 0,
+    "longitude": 0,
+    "lang": "en_US",
+    "avatar": "plug",
+    "region": "Europe/Budapest",
+    "specs": "",
+    "nickname": "TW9zb2dlcA==",
+    "has_set_location_info": false,
+    "device_on": true,
+    "on_time": 266861,
+    "default_states": {
+      "type": "last_states",
+      "state": {}
+    },
+    "overheated": false,
+    "power_protection_status": "normal",
+    "overcurrent_status": "normal"
+  },
+  "error_code": 0
+}

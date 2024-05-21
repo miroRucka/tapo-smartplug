@@ -1,4 +1,4 @@
-package online.labmaster.taposmartplug.api;
+package online.labmaster.taposmartplug.exception;
 
 public class TapoException extends RuntimeException {
 

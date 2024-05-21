@@ -1,6 +1,6 @@
 package online.labmaster.taposmartplug.metrics;
 
-import online.labmaster.taposmartplug.api.TapoException;
+import online.labmaster.taposmartplug.exception.TapoException;
 import online.labmaster.taposmartplug.api.inbound.DeviceInfoResponse;
 import online.labmaster.taposmartplug.api.inbound.EnergyUsageResponse;
 

@@ -4,24 +4,25 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.ImmutableTag;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
-import online.labmaster.taposmartplug.api.TapoException;
+import lombok.extern.slf4j.Slf4j;
+import online.labmaster.taposmartplug.exception.TapoAuthException;
+import online.labmaster.taposmartplug.exception.TapoException;
 import online.labmaster.taposmartplug.api.inbound.DeviceInfoResponse;
+import online.labmaster.taposmartplug.service.TapoKeysService;
 import online.labmaster.taposmartplug.service.TapoService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.*;
-import java.util.function.Supplier;
 
 @Component
+@Slf4j
 public class TapoMetrics {
 
-    public static final Logger logger = LoggerFactory.getLogger(TapoMetrics.class);
     public static final String TAPO_ENERGY_USAGE_CURRENT_POWER = "tapo.energyUsage.currentPower";
     public static final String TAPO_ENERGY_USAGE_TODAY_ENERGY = "tapo.energyUsage.todayEnergy";
     public static final String TAPO_ENERGY_USAGE_MONTH_ENERGY = "tapo.energyUsage.monthEnergy";
@@ -41,8 +42,10 @@ public class TapoMetrics {
     @Autowired
     private TapoService tapoService;
 
-    private Map<String, TapoMetricsData> tapoMetricsData = new HashMap<>();
+    @Autowired
+    private TapoKeysService tapoKeysService;
 
+    private Map<String, TapoMetricsData> tapoMetricsData = new HashMap<>();
 
     @Value("${tapo.plug.IPs}")
     private List<String> plugIPs;
@@ -50,13 +53,17 @@ public class TapoMetrics {
     @Async
     @Scheduled(fixedDelay = 30000, initialDelay = 5000)
     public void registerTapoMetrics() {
-        logger.info("-> start measure ->");
+        log.info("-> start measure ->");
         for (String plugIP : plugIPs) {
-            registerMetricsByIP(plugIP);
+            try {
+                registerMetricsByIP(plugIP);
+            } catch (IOException e) {
+                log.error("Tapo Device is unavailable at {}", plugIP);
+            }
         }
     }
 
-    private void registerMetricsByIP(String plugIP) {
+    private void registerMetricsByIP(String plugIP) throws IOException {
         try {
             tapoMetricsData.put(plugIP, new TapoMetricsData(tapoService.energyUsed(plugIP), tapoService.deviceInfo(plugIP)));
             Gauge.builder(TAPO_ENERGY_USAGE_CURRENT_POWER, () -> tapoMetricsData.get(plugIP).getEnergyUsage().currentPower).strongReference(true).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
@@ -69,8 +76,12 @@ public class TapoMetrics {
             Gauge.builder(TAPO_DEVICE_INFO_DEVICE_ON, () -> tapoMetricsData.get(plugIP).getDeviceInfo().deviceOn ? 1 : 0).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
         } catch (TapoException e) {
             handleTapoException(plugIP, e);
+        } catch (TapoAuthException e) {
+            log.error("Request unauthorized. Trying to reload keys for: {}", plugIP);
+            tapoKeysService.invalidateAndReloadKeys(plugIP);
         } catch (Exception e) {
-            logger.error("cannot retrieve tapo metrics for plug ip: " + plugIP, e.getMessage());
+            log.error("Cannot retrieve metrics for Tapo plug at ip: {}, {}", plugIP, e.getMessage());
+            tapoKeysService.invalidateAndReloadKeys(plugIP);
         }
     }
 
@@ -78,7 +89,7 @@ public class TapoMetrics {
         if (TAPO_ERR_CODE == e.getErrorCode()) {
             Gauge.builder(TAPO_DEVICE_INFO_DEVICE_ON, () -> 0).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
         } else {
-            logger.error("cannot retrieve tapo metrics for plug ip: " + plugIP, e);
+            log.error("Cannot retrieve metrics for Tapo plug at ip: {}", plugIP, e);
         }
     }
 

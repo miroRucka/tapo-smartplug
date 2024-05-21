@@ -39,6 +39,14 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 		</dependency>
+
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+			<version>1.18.24</version>
+		</dependency>
+
 		<!-- Springdoc OpenApi -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
