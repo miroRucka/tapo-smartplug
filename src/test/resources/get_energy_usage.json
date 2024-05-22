@@ -1,0 +1,16 @@
+{
+  "result": {
+    "today_runtime": 1133,
+    "month_runtime": 4770,
+    "today_energy": 8,
+    "month_energy": 30,
+    "local_time": "2024-05-17 18:53:16",
+    "electricity_charge": [
+      0,
+      0,
+      0
+    ],
+    "current_power": 0
+  },
+  "error_code": 0
+}

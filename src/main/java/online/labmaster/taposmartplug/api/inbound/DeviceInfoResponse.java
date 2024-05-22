@@ -1,11 +1,13 @@
 package online.labmaster.taposmartplug.api.inbound;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DeviceInfoResponse extends TapoResponse {
 
     public DeviceInfo result;
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class DeviceInfo {
         @JsonProperty("device_id")
         public String deviceId;
@@ -81,6 +83,9 @@ public class DeviceInfoResponse extends TapoResponse {
 
         @JsonProperty("overheated")
         public boolean overheated;
+
+        @JsonProperty("overcurrent_status")
+        public String overcurrentStatus;
 
         @JsonProperty("power_protection_status")
         public String powerProtectionStatus;

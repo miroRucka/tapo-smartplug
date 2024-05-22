@@ -1,10 +1,14 @@
 # TAPO smartplug prometheus monitoring
-Tapo smart pulug advanced monitoring for prometheus &amp; grafana. The aim of this project is to provide an extended and long-term
-monitoring over tapo sockets. This overview should be available from all devices and contain data over months to years for a more detailed analysis of electricity consumption, its price, and the like. Also have the option to add notifications for non-standard behavior, for example high or low electricity consumption
+TP-Link Tapo smart plug advanced monitoring for Prometheus &amp; Grafana. The aim of this project is to provide an extended and long-term
+monitoring over tapo sockets. This overview should be available from all devices and contain data over months to years for a more detailed analysis of electricity consumption, its price, and the like. Also have the option to add notifications for non-standard behavior, for example high or low electricity consumption.
+
+> Note about KLAP protocol: 
+> As of firmware 1.1.0 Build 230721 Rel.224802, KLAP protocol was introduced and the previous 
+> secure pass-through protocol is no longer operational. The code in this project has been uplifted to support KLAP as of May 2024, previous implementation remained in place in case it's needed.
 
 ### How to use it - source code?
 
-This is a spring boot application that has a RESTful API and Prometheus metrics for better monitoring of smart sockets Smart Plug metrics for TP-Link Tapo P110.
+This is a Spring Boot application that has a RESTful API and Prometheus metrics for better monitoring of smart sockets Smart Plug metrics for TP-Link Tapo P110.
 
 To run from the source code, just run the 
 
@@ -18,16 +22,26 @@ class with the following virtual machine parameters
  - tapo.plug.password: **password to the tplink account**
  - tapo.plug.IPs: **ip addresses of sockets**
 
-WARNING! the application must run on the same network as the sockets
-
+> WARNING! The application must run on the same network as the sockets
 
 ### How to use it - docker?
 
+> Note: for Mac M1 and newer, use arm64v8/openjdk:18 as base image in Dockerfile.
+
+Building the image:
+
+```bash
+mvn clean compile package
+docker build . -t mirorucka/tapo-smartplug:1.0.1 -f ./Dockerfile
+```
+
 Easy to run with a command
 
-```docker run -p 8080:8080 -e JAVA_OPTS="-Dtapo.plug.username=username -Dtapo.plug.password=password -Dtapo.plug.IPs=plug ip1,plug ip2" mirorucka/tapo-smartplug:1.0.1```
+```bash
+docker run -p 8080:8080 -e JAVA_OPTS="-Dtapo.plug.username=username -Dtapo.plug.password=password -Dtapo.plug.IPs=plug ip1,plug ip2" mirorucka/tapo-smartplug:1.0.1
+```
 
-The parameters are described above
+The parameters are described above.
 
 ### How to use it - docker compose?
 
@@ -105,7 +119,7 @@ scrape_configs:
       - targets: ['tapo-smart-plug:8080']
 ```
 
-metrics are available at host:8080/actuator/prometheus
+metrics are available at http://localhost:8080/actuator/prometheus
 
 all metrics begin with the prefix tapo_
 
@@ -121,6 +135,20 @@ current list
 | tapo_deviceInfo_on_time       |
 | tapo_deviceInfo_rssi          |
 | tapo_deviceInfo_device_on     |
+
+
+## Supported TAPO functions
+| Function name     |
+|-------------------|
+| get_device_info   |
+| get_device_usage  |
+| get_energy_data   |
+| get_energy_usage  |
+| get_current_power |
+
+## Prometheus UI
+
+Prometheus UI is located at http://localhost:9090/
 
 ## Grafana
 
@@ -144,3 +172,10 @@ http://localhost:8080/swagger-ui/index.html
 ## TODO
 - swagger API describe
 - API extension with write operation
+
+## Known Issues / Limitations
+
+- In some cases, TP-Link TAPO device responds 403 even if Handshake 1 and 2 were successful.
+When it occurs, the code retries handshake and eventually the device responds properly.
+
+- Parameterized energy data query is not yet implemented (for example to to get historical data).

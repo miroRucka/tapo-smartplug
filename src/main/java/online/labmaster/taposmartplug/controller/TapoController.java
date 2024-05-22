@@ -1,6 +1,7 @@
 package online.labmaster.taposmartplug.controller;
 
 import online.labmaster.taposmartplug.api.TapoApi;
+import online.labmaster.taposmartplug.api.inbound.CurrentPowerResponse;
 import online.labmaster.taposmartplug.api.inbound.DeviceInfoResponse;
 import online.labmaster.taposmartplug.api.inbound.DeviceUsageResponse;
 import online.labmaster.taposmartplug.api.inbound.EnergyUsageResponse;
@@ -43,6 +44,12 @@ public class TapoController implements TapoApi {
         checkPlugIP(plugIP);
         tapoKeysService.getTapoKeys(plugIP);
         return new ResponseEntity(HttpStatus.ACCEPTED);
+    }
+
+    @Override
+    public CurrentPowerResponse currentPower(String plugIP) throws NoSuchAlgorithmException, IOException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException, InvalidAlgorithmParameterException {
+        checkPlugIP(plugIP);
+        return tapoService.currentPower(plugIP);
     }
 
     @Override
