@@ -23,6 +23,7 @@ import java.util.*;
 @Slf4j
 public class TapoMetrics {
 
+    public static final String TAPO_ENERGY_USAGE_CURRENT_POWER_IN_WATT = "tapo.energyUsage.currentPowerInWatt";
     public static final String TAPO_ENERGY_USAGE_CURRENT_POWER = "tapo.energyUsage.currentPower";
     public static final String TAPO_ENERGY_USAGE_TODAY_ENERGY = "tapo.energyUsage.todayEnergy";
     public static final String TAPO_ENERGY_USAGE_MONTH_ENERGY = "tapo.energyUsage.monthEnergy";
@@ -65,7 +66,8 @@ public class TapoMetrics {
 
     private void registerMetricsByIP(String plugIP) throws IOException {
         try {
-            tapoMetricsData.put(plugIP, new TapoMetricsData(tapoService.energyUsed(plugIP), tapoService.deviceInfo(plugIP)));
+            tapoMetricsData.put(plugIP, new TapoMetricsData(tapoService.energyUsed(plugIP), tapoService.deviceInfo(plugIP), tapoService.currentPower(plugIP)));
+            Gauge.builder(TAPO_ENERGY_USAGE_CURRENT_POWER_IN_WATT, () -> tapoMetricsData.get(plugIP).getCurrentPowerInfo().currentPower).strongReference(true).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
             Gauge.builder(TAPO_ENERGY_USAGE_CURRENT_POWER, () -> tapoMetricsData.get(plugIP).getEnergyUsage().currentPower).strongReference(true).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
             Gauge.builder(TAPO_ENERGY_USAGE_TODAY_ENERGY, () -> tapoMetricsData.get(plugIP).getEnergyUsage().todayEnergy).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
             Gauge.builder(TAPO_ENERGY_USAGE_MONTH_ENERGY, () -> tapoMetricsData.get(plugIP).getEnergyUsage().monthEnergy).tags(buildPlugTags(tapoMetricsData.get(plugIP).getDeviceInfo())).register(registry);
@@ -98,7 +100,12 @@ public class TapoMetrics {
         List<Tag> tags = new ArrayList<>();
         tags.add(new ImmutableTag(DEVICE_ID, deviceInfo.deviceId));
         tags.add(new ImmutableTag(IP, deviceInfo.ip));
-        tags.add(new ImmutableTag(NICKNAME, deviceInfo.nickname));
+        tags.add(new ImmutableTag(NICKNAME, base64Decode(deviceInfo.nickname)));
         return tags;
     }
+
+    private String base64Decode(String message) {
+        return new String(Base64.getDecoder().decode(message));
+    }
+
 }
